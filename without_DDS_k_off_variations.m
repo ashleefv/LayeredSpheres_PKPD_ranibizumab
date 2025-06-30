@@ -7,6 +7,12 @@ for i = 1:length(pngFiles)
     delete(pngFiles(i).name);
 end
 
+% DDS geometry
+DDS_geometry = "Chitosan_PCL";
+%DDS_geometry = "Chitosan";
+%DDS_geometry = "PCL";
+
+
 figure_count = 1;
 Data_time_at_target_ret_10 = [];
 Data_time_at_target_ret_50 = [];
@@ -16,6 +22,8 @@ Data_time_at_target_aq_10 = [];
 Data_time_at_target_aq_50 = [];
 
 dose_in = [2, 2, 2, 2];
+radius_scale = [1, 1, 1, 1];
+thickness_scale = [1, 1, 1, 1];
 
 %Alter K_off values here
 %k_off Values
@@ -30,7 +38,7 @@ k_OffStore = [k_off1,k_off2,k_off3,k_off4];
 % Time range
 tinitial = 0; %days
 tfinal=1000; %time (days)
-time_interval = 20;
+time_interval = 10;
 numberOfTimes = tfinal*time_interval;
 t=linspace(tinitial, tfinal, numberOfTimes); %t is the time
 
@@ -188,12 +196,12 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
 xticklabels({'0.864', '1.296', '1.728', '3.456'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{off}');
 set(hBar1, 'BarWidth', barWidth);
 set(gca, 'FontSize', 12)
 legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0,250])
+ylim([0,700])
 pbaspect([1 1 1])
 axis square
 box on
@@ -208,12 +216,12 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
 xticklabels({'0.864', '1.296', '1.728', '3.456'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{off}');
 set(hBar1, 'BarWidth', barWidth);
 set(gca, 'FontSize', 12)
 legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0,450])
+ylim([0,700])
 pbaspect([1 1 1])
 axis square
 box on
@@ -276,6 +284,17 @@ exportgraphics(figure(figure_count),sprintf('Aqueous_dose_response_VEGF_nonDDS.p
 figure_count = figure_count+1;
 hold off
 
+
+
+save('without_DDS_koff_variations.mat', ...
+    't', ...
+    'C_vret_Data', 'C_rret_Data', ...
+    'C_vvit_Data', 'C_rvit_Data', ...
+    'C_vaq_Data', 'C_raq_Data', ...
+    'Data_time_at_target_ret_10', 'Data_time_at_target_ret_50', ...
+    'Data_time_at_target_vit_10', 'Data_time_at_target_vit_50', ...
+    'Data_time_at_target_aq_10', 'Data_time_at_target_aq_50', ...
+    'k_OffStore', 'dose_in', 'DDS_geometry');
 
 
 function derivVector=ODEs(t,y, k_Off_value) %must be (denominator, numerators)

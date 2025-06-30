@@ -31,37 +31,44 @@ NR = NR1;
 %% Compute the diffusion terms at 0<r<r2
 % --- Loop over all interior spatial discretizations 0<r<r2 ---
 if dr1 >0 && dr2 > 0
-    %    for rr = NR1 interface, in algebraic form, assumes continuity
-%     rr = NR1;
-%     gamma = alpha(end)*dr1/(alpha(1)*dr2);
-%     c(rr) = (c(rr-1)+c(rr+1)*gamma)/(1+gamma);
     % inner layer
    for rr = 2:NR1-1
        dr = dr1;
         i = rr-1; % i indexing starts at 0 and rr indexing in MATLAB starts at 1
-%       scheme 0 from the reference
         dcdt(rr) = alpha(1)/i/dr^2*...
         ((i+1)*c(rr+1)-2*i*c(rr)+(i-1)*c(rr-1));
    end 
-  
-	% outer layer
-   for rr = NR1+1:NR1+NR2-2
+   
+   	% outer layer
+   for rr = NR1+2:NR1+NR2-1
        dr = dr2;
-        i = rr-1; % i indexing starts at 0 and rr indexing in MATLAB starts at 1
-%       scheme 0 from the reference
-        dcdt(rr) = alpha(end)/i/dr^2*...
-        ((i+1)*c(rr+1)-2*i*c(rr)+(i-1)*c(rr-1));
+       j = rr-1-NR1;
+       Icore = NR1-1;
+       dcdt(rr) = alpha(end)/(Icore*dr1+j*dr2)/dr2*(c(rr+1)-c(rr-1)) ...
+           + alpha(end)/dr2^2*(c(rr+1)-2*c(rr)+c(rr-1));
    end 
-    
-%       % interface for rr = NR goes here in ODE form
-   for rr = NR1
-       gamma = alpha(end)*dr1/(alpha(1)*dr2);
-       dcdt(rr) = (dcdt(rr-1)+dcdt(rr+1)*gamma)/(k+gamma);
+
+   for rr = NR1 %Interface 
+       i = rr-1;
+       raplus1 = i*dr1+dr1;
+       rbminus1 = i*dr1-dr2;
+       alpha1 = alpha(1);
+       alpha2 = alpha(end);
+       gamma = alpha2*dr1/(alpha1*dr2);
+       sigma = raplus1/rbminus1*gamma;
+       cb = c(rr+1);
+       cbplus1 = c(rr+2);
+       caminus1 = c(rr-1);
+    % interface shell side
+       dcdt(rr+1) = ( 2*sigma*cbplus1 + 2*caminus1 - 2*(k+sigma)*cb  )/...
+       (k*dr1^2/alpha1 + sigma * dr2^2/alpha2);
+    % interface core side
+       dcdt(rr) = k*dcdt(rr+1);
    end
+
 else    
 	for rr = 2:NR-1
         i = rr-1; % i indexing starts at 0 and rr indexing in MATLAB starts at 1
-%       scheme 0 from the reference
         dcdt(rr) = alpha(1)/i/dr^2*...
         ((i+1)*c(rr+1)-2*i*c(rr)+(i-1)*c(rr-1));
 	end 
@@ -69,7 +76,7 @@ end
 
 %% Constant boundary condition at surface r = R2 (outer surface sphere)  
 if dr1 >0 && dr2 > 0
-    for rr = NR1+NR2-1
+    for rr = NR1+NR2
         dcdt(rr) = 0;
     end
 else
@@ -77,7 +84,7 @@ else
         dcdt(rr) = 0;
     end
 end    
-    dcdt = dcdt';
-    
+
+dcdt = dcdt';
 
 end

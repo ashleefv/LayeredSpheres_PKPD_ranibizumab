@@ -39,7 +39,7 @@ k_DStore = [k_D1, k_D2, k_D3, k_D4];
 % Time range
 tinitial = 0; %days
 tfinal=1000; %time (days)
-time_interval = 20;
+time_interval = 10;
 numberOfTimes = tfinal*time_interval;
 t=linspace(tinitial, tfinal, numberOfTimes); %t is the time
 
@@ -100,13 +100,13 @@ for i = 1:length(k_DStore) %for loop for each dose
 k_D_value = k_DStore(i);
 
 dose_specific = dose_in(i);
-[time, drug_dose] = solve_FD_spheres_variable_diffusivity(dose_specific, tfinal, DDS_geometry, radius_scale(i), thickness_scale(i));
+[time, drug_dose, initial_drug_dose] = solve_FD_spheres_variable_diffusivity(dose_specific, tfinal, DDS_geometry, radius_scale(i), thickness_scale(i));
 
 RealTime = time/(60*60*24);
 Dose = (drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12;
 
 rpar = [Dose, RealTime];
-Ci=[v_ret_Initial,0,0,0,v_vit_Initial,rpar(1,1),0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
+Ci=[v_ret_Initial,0,0,0,v_vit_Initial,initial_drug_dose,0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
 odeFunc = @(t,Ci) ODEs(t,Ci, rpar, k_D_value);
 soln=ode45(odeFunc,t,Ci);
 
@@ -203,7 +203,7 @@ box on
 plot(RealTime, drug_dose, 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release (mg)');
 legend(sprintf('Dose %0.2f mg', dose_in(i)), 'Location', 'northeast')
 pbaspect([1 1 1])
 axis square
@@ -211,6 +211,8 @@ exportgraphics(figure(figure_count),sprintf('drug_release_DDS%d.png', k_DStore(i
 figure_count = figure_count+1;
 hold off
 
+drug_dose_all{i,:} = drug_dose;
+RealTime_all{i,:} = RealTime;
 end
 
 
@@ -221,11 +223,12 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
 xticklabels({'19000', '9500', '4750', '1900'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{D}');
 set(hBar1, 'BarWidth', barWidth);
 set(gca, 'FontSize', 12)
 legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
+ylim([0,700])
 pbaspect([1 1 1])
 axis square
 box on
@@ -240,11 +243,12 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
 xticklabels({'19000', '9500', '4750', '1900'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{D}');
 set(hBar1, 'BarWidth', barWidth);
 set(gca, 'FontSize', 12)
 legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
+ylim([0,700])
 pbaspect([1 1 1])
 axis square
 box on
@@ -306,6 +310,21 @@ box on
 exportgraphics(figure(figure_count),sprintf('Aqueous_dose_response_VEGF.png'), 'Resolution', 300)
 figure_count = figure_count+1;
 hold off
+
+
+save('DDS_doses_kD', ...
+    't', ...
+    'C_vret_Data', 'C_rret_Data', ...
+    'C_vvit_Data', 'C_rvit_Data', ...
+    'C_vaq_Data', 'C_raq_Data', ...
+    'Data_time_at_target_ret_10', 'Data_time_at_target_ret_50', ...
+    'Data_time_at_target_vit_10', 'Data_time_at_target_vit_50', ...
+    'Data_time_at_target_aq_10', 'Data_time_at_target_aq_50', ...
+    'drug_dose_all', 'RealTime_all', ...
+    'k_DStore', 'dose_in', 'radius_scale', 'thickness_scale', ...
+    'DDS_geometry', ...
+    'v_ret_Initial', 'v_vit_Initial', 'v_aq_Initial');
+
 
 
 function derivVector=ODEs(t,y, rpar, k_D_value) %must be (denominator, numerators)

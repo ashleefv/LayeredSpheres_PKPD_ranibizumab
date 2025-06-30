@@ -1,4 +1,4 @@
-function [output1, output2] = solve_FD_spheres_variable_diffusivity(dose_amount, Total_time, DDS_geometry, radius_scale, thickness_scale)
+function [output1, output2, output3] = solve_FD_spheres_variable_diffusivity(dose_amount, Total_time, DDS_geometry, radius_scale, thickness_scale)
 
 %% Solves the PDE for Fickian diffusion with variable diffusivity within a radially symmetric sphere 
 % The PDE is solved numerically using method of lines, the spherical finite
@@ -29,7 +29,7 @@ if strcmp(DDS_geometry,"Chitosan_PCL")
     delR = (((12.7e-4)/2) - ((10.2e-4)/2))*thickness_scale;
     R2 = (R1+delR); %If PCL/Chitosan
     DInner = 3e-15; % cm2/s;;
-    DOuter = 3e-11; % cm2/s; for chiotosan 2.91e-15, for PLC 2.98e-11
+    DOuter = 3e-12; % cm2/s; for chiotosan 2.91e-15, for PLC 2.98e-11
     burst = 4; % %
     k = 1; %partition coefficient
     alpha0Inner = DInner/R2^2; % scale by outer radius in dimensional form
@@ -49,7 +49,7 @@ if strcmp(DDS_geometry,"PCL")
     R1 = 0;
     R2 = ((12.7e-4)/2)*radius_scale; %If PCL/Chitosan
     %DInner = 2.91e-15; % cm2/s;;
-    DOuter = 3e-11; % cm2/s; for chiotosan 2.91e-15, for PLC 2.98e-11
+    DOuter = 3e-12; % cm2/s; for chiotosan 2.91e-15, for PLC 2.98e-11
     burst = 4; % %
     k = 1; %partition coefficient
     %alpha0Inner = DInner/R2^2; % scale by outer radius in dimensional form
@@ -109,7 +109,7 @@ if abs(dr1-0) < eps
 elseif abs(dr2-0) < eps
     r = rInner;
 else
-    r = [rInner(1:end-1), rOuter]; % combined r for inner core and outer shell without replicating r1, non-dimensionalized
+    r = [rInner, rOuter]; % combined r for inner core and outer shell replicating r1, non-dimensionalized
 end
 Ntotal = length(r); % total numuber of points in two zones.
 Mtotal = Ntotal - 1; % total number of intervals = 2*M
@@ -119,7 +119,7 @@ if dr1 >0 && dr2 > 0
     % interior at rr = NR+1:2*NR for outer shell
     % note for future, rr = NR will have dr not equal on both size of FD.
     c0(1:NR1-1) = initial_condition;
-    c0(NR1:Ntotal-1) = InitialDrugInOuterLayer;
+    c0(NR1+2:Ntotal-1) = InitialDrugInOuterLayer;
     % outer BC at 2*NR-1
     c0(Ntotal) = boundary_condition;
 else
@@ -142,7 +142,7 @@ elseif DCASE == 4
     timevector = [0 0.02 0.05 0.07 0.1 0.28]./alpha0;
     titlestring = 'Diffusion Case IV';
 elseif DCASE == 5
-    timevector = [0:1:Total_time].*86400; % in seconds
+    timevector = [0:0.1:Total_time].*86400; % in seconds
     %timevector = [0:1:10].*3600; % scaled into hours.
     titlestring = 'Diffusion Case V';    
 end
@@ -161,8 +161,9 @@ if dr1 >0 && dr2 > 0
 %     alpha = [alpha0Inner, alpha0Interface, alpha0Outer];
     alpha = [alpha0Inner alpha0Outer];
     %Establish I.C at the interface
-    gamma = alpha(end)*dr1/(alpha(1)*dr2);
-    c0(NR1) = (c0(NR1-1)+c0(NR1+1)*gamma)/(1+gamma); 
+    gamma = alpha0Outer*dr1/(alpha0Inner*dr2);
+    c0(NR1) = (initial_condition+InitialDrugInOuterLayer*gamma)/(1+gamma/k); %Interface condition from the core side
+    c0(NR1+1) = c0(NR1)/k; %Interface condition from the shell side
 elseif dr2 == 0
     alpha = alpha0Inner;
 else
@@ -182,9 +183,9 @@ c=concentration';
 
 
 if dr1>0
-    denom1 = initial_condition/3*rInner(end)^3;
+    denom1 = dr1*simps(c0(1:NR1).*rInner(1:NR1).*rInner(1:NR1));
     if dr2 >0
-     	denom2 = InitialDrugInOuterLayer/3*(rOuter(end)^3-rInner(end)^3);        
+     	denom2 = dr2*simps(c0(NR1+1:Ntotal).*rOuter(1:NR2).*rOuter(1:NR2));         
     else
         denom2 = 0 ;  
     end
@@ -198,35 +199,44 @@ cumulrel_num = ones(size(time));
             cumulrel_num(tt) = burst;
         else
             if dr1 >0
-                % If X is a scalar spacing, then trapz(X,Y) is equivalent to X*trapz(Y).
-                integrand1 = dr1*trapz((concentration(tt,1:NR1)).*rInner(1:NR1).*rInner(1:NR1)); % from 0 to r1                
+                % If X is a scalar spacing, then simps(X,Y) is equivalent to X*simps(Y).
+                integrand1 = dr1*simps((concentration(tt,1:NR1)).*rInner(1:NR1).*rInner(1:NR1)); % from 0 to r1                
                 if dr2 >0
-                    integrand2 = dr2*trapz((concentration(tt,NR1:Ntotal)).*rOuter(1:NR2).*rOuter(1:NR2)); % from r1 to r2
+                    integrand2 = dr2*simps((concentration(tt,NR1+1:Ntotal)).*rOuter(1:NR2).*rOuter(1:NR2)); % from r1 to r2
                 else
                     integrand2 = 0;
                 end
             else
                 integrand1 = 0;
-                integrand2 = dr2*trapz((concentration(tt,1:NR)).*rOuter(1:NR).*rOuter(1:NR)); % from 0 to r2
+                integrand2 = dr2*simps((concentration(tt,1:NR)).*rOuter(1:NR).*rOuter(1:NR)); % from 0 to r2
             end  
             cumulrel_num(tt) = (100-burst)*(1-( integrand1 + integrand2 )/(denom1+denom2))+burst; % integrating from 0 to r1, then r1 to r2
         end
     end
 
 
-% drug release percentages over time
+% drug release percentages over time units of %/s
 drug_release = zeros(size(cumulrel_num));
- for drug_release_time = 1:length(cumulrel_num)   
+ for i = 1:length(cumulrel_num)   
     
-    if drug_release_time == 1
-        drug_release(drug_release_time) = cumulrel_num(1);
+    if i == 1
+        drug_release(i) =  cumulrel_num(1); % do not use this as initial drug release RATE, instead this is the burst amount that determines initial drug dose AMOUNT
     else
-        drug_release(drug_release_time) = cumulrel_num(drug_release_time)-cumulrel_num(drug_release_time-1);
+        drug_release(i) = (cumulrel_num(i)-cumulrel_num(i-1)) / (time(i) - time(i-1));
     end
  end
- 
-% drug release over time
-drug_release = initial_condition*(drug_release/100);
+
+% initial drug dose mg/s
+initial_drug_dose = initial_condition*(drug_release(1)/100);
+
+% drug release over time IC units (mg)/s
+for i = 1:length(cumulrel_num) 
+if i == 1
+    drug_release(i) = initial_condition*(drug_release(2)/100)*60*60*24;
+else
+    drug_release(i) = initial_condition*(drug_release(i)/100)*60*60*24;
+end
+end
 % figure(2)
 % plot(time/(60*60*24),drug_release)
 % xlabel('Time (days)')
@@ -234,4 +244,5 @@ drug_release = initial_condition*(drug_release/100);
 
 output1 = time;
 output2 = drug_release;
+output3= initial_drug_dose;
 end

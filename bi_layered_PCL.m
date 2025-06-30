@@ -30,7 +30,7 @@ thickness_scale = [0.01, 0.1, 1, 10, 20, 25, 30];
 % Time range
 tinitial = 0; %days
 tfinal=1000; %time (days)
-time_interval = 20;
+time_interval = 10;
 numberOfTimes = tfinal*time_interval;
 t=linspace(tinitial, tfinal, numberOfTimes); %t is the time
 
@@ -93,13 +93,13 @@ v_aq_Initial = E_Q*(V_vit/C_L)*kv_el;
 for i = 1:length(dose_in) %for loop for each dose
 
 dose_specific = dose_in(i);
-[time, drug_dose] = solve_FD_spheres_variable_diffusivity(dose_specific, tfinal, DDS_geometry, radius_scale(i), thickness_scale(i));
+[time, drug_dose, initial_drug_dose] = solve_FD_spheres_variable_diffusivity(dose_specific, tfinal, DDS_geometry, radius_scale(i), thickness_scale(i));
 
 RealTime = time/(60*60*24);
 Dose = (drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12;
 
 rpar = [Dose, RealTime];
-Ci=[v_ret_Initial,0,0,0,v_vit_Initial,rpar(1,1),0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
+Ci=[v_ret_Initial,0,0,0,v_vit_Initial,initial_drug_dose,0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
 odeFunc = @(t,Ci) ODEs(t,Ci, rpar);
 soln=ode45(odeFunc,t,Ci);
 
@@ -196,7 +196,7 @@ box on
 plot(RealTime, drug_dose, 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release (mg)');
 legend(sprintf('%0.2fΔR', thickness_scale(i)), 'Location', 'northeast')
 %legend(sprintf('%0.2fR_C, %0.2fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
 %fontsize(figure(3), 17, "points")
@@ -207,6 +207,8 @@ exportgraphics(figure(figure_count),sprintf('drug_release_DDS%d.png', thickness_
 figure_count = figure_count+1;
 hold off
 
+drug_dose_all{i,:} = drug_dose;
+RealTime_all{i,:} = RealTime;
 end
 
 
@@ -217,11 +219,12 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(radius_scale)); 
 xticklabels({'0.01\DeltaR', '0.1\DeltaR', '\DeltaR', '10\DeltaR', '20\DeltaR','25\DeltaR', '30\DeltaR'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied \DeltaR, Constant R_{C}');
 set(gca, 'FontSize', 12)
 legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
+ylim([0,2000])
 pbaspect([1 1 1])
 axis square
 box on
@@ -235,18 +238,35 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(radius_scale)); 
 xticklabels({'0.01\DeltaR', '0.1\DeltaR', '\DeltaR', '10\DeltaR', '20\DeltaR','25\DeltaR', '30\DeltaR'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied \DeltaR, Constant R_{C}');
 set(gca, 'FontSize', 12)
 %legend({'10% Suppression', '50% Suppression'},'FontSize',12, 'Location', 'northwest');
 legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
+ylim([0,2000])
 pbaspect([1 1 1])
 axis square
 box on
 exportgraphics(figure(figure_count),sprintf('barbiPCL_50.png'), 'Resolution', 300)
 figure_count = figure_count+1;
 hold off
+
+
+
+save('bi_layered_PCL', ...
+    't', ...
+    'C_vret_Data', 'C_rret_Data', ...
+    'C_vvit_Data', 'C_rvit_Data', ...
+    'C_vaq_Data', 'C_raq_Data', ...
+    'Data_time_at_target_ret_10', 'Data_time_at_target_ret_50', ...
+    'Data_time_at_target_vit_10', 'Data_time_at_target_vit_50', ...
+    'Data_time_at_target_aq_10', 'Data_time_at_target_aq_50', ...
+    'drug_dose_all', 'RealTime_all', ...
+    'radius_scale', 'thickness_scale', 'dose_in', ...
+    'DDS_geometry', ...
+    'v_ret_Initial', 'v_vit_Initial', 'v_aq_Initial');
+
 
 
 

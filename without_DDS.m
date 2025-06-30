@@ -7,6 +7,11 @@ for i = 1:length(pngFiles)
     delete(pngFiles(i).name);
 end
 
+% DDS geometry
+DDS_geometry = "Chitosan_PCL";
+%DDS_geometry = "Chitosan";
+%DDS_geometry = "PCL";
+
 
 figure_count = 1;
 Data_time_at_target_ret_10 = [];
@@ -17,6 +22,8 @@ Data_time_at_target_aq_10 = [];
 Data_time_at_target_aq_50 = [];
 
 dose_in = [0.05, 0.1, 0.5, 1, 2];
+radius_scale = [1, 1, 1, 1, 1, 1];
+thickness_scale = [1, 1, 1, 1, 1, 1]; %various doses to be tested in milligrams
 
 in_vivo_suppression_time = [];
 in_vitro_suppression_time = [];
@@ -25,7 +32,7 @@ in_vitro_suppression_time = [];
 % Time range
 tinitial = 0; %days
 tfinal=1000; %time (days)
-time_interval = 20;
+time_interval = 10;
 numberOfTimes = tfinal*time_interval;
 t=linspace(tinitial, tfinal, numberOfTimes); %t is the time
 
@@ -188,13 +195,13 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
 xticklabels({'0.05', '0.1', '0.5', '1', '2'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('Drug Amount (mg)');
 title('Without DDS')
 set(hBar1, 'BarWidth', barWidth);
 set(gca, 'FontSize', 12)
 legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0,250])
+ylim([0,450])
 pbaspect([1 1 1])
 axis square
 box on
@@ -209,7 +216,7 @@ hold on
 hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
 xticklabels({'0.05', '0.1', '0.5', '1', '2'});
-ylabel('Suppression Time (Days)');
+ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('Drug Amount (mg)');
 title('Without DDS')
 set(hBar1, 'BarWidth', barWidth);
@@ -223,6 +230,17 @@ exportgraphics(figure(figure_count),sprintf('bar_dose_response_50.png'), 'Resolu
 figure_count = figure_count+1;
 hold off
 
+
+%------------------------------------------------------------
+save('without_DDS.mat', ...
+    'Data_time_at_target_ret_10', 'Data_time_at_target_ret_50', ...
+    'Data_time_at_target_vit_10', 'Data_time_at_target_vit_50', ...
+    'Data_time_at_target_aq_10', 'Data_time_at_target_aq_50', ...
+    'dose_in', 't', ...
+    'C_vret_Data', 'C_vvit_Data', 'C_vaq_Data', ...
+    'C_rret_Data', 'C_rvit_Data', 'C_raq_Data');
+
+%------------------------------------------------------------
 
 % Figure 2 for 0.5 mg
 for j = 1:length(dose_in)
