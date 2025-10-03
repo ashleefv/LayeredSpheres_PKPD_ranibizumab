@@ -99,14 +99,15 @@ for i = 1:length(k_DStore) %for loop for each dose
 
 k_D_value = k_DStore(i);
 
-dose_specific = dose_in(i);
+dose_specific = dose_in(i); %mg
 [time, drug_dose, initial_drug_dose] = solve_FD_spheres_variable_diffusivity(dose_specific, tfinal, DDS_geometry, radius_scale(i), thickness_scale(i));
 
 RealTime = time/(60*60*24);
-Dose = (drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12;
+Dose = (drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12; %pM/s
+initial_drug_dose_pM = (initial_drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12;%pM
 
 rpar = [Dose, RealTime];
-Ci=[v_ret_Initial,0,0,0,v_vit_Initial,initial_drug_dose,0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
+Ci=[v_ret_Initial,0,0,0,v_vit_Initial,initial_drug_dose_pM,0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
 odeFunc = @(t,Ci) ODEs(t,Ci, rpar, k_D_value);
 soln=ode45(odeFunc,t,Ci);
 
@@ -148,10 +149,6 @@ else
     'Drug loading is not enough to reduce VEGF to 50% of its original value'
 end
 
-%disp(Index_min)
-%disp(['The lowest value is:', num2str(lowest_vret), ' at index:', num2str(Index_vret)]);
-%disp(['The lowest value is:', num2str(lowest_vvit), ' at index:', num2str(Index_vvit)]);
-%disp(['The lowest value is:', num2str(lowest_vaq), ' at index:', num2str(Index_vaq)]);
 
 %Calculates 10% Free VEGF Suppression Time
 editedC_vret = C_vret(Index_min:end);
@@ -171,7 +168,6 @@ index_vit_10 = find(editedC_vvit >= target_concentration_vit_10, 1);
 time_at_target_vit_10 = editedt(index_vit_10);
 index_aq_10 = find(editedC_vaq >= target_concentration_aq_10, 1);
 time_at_target_aq_10 = editedt(index_aq_10);
-%fprintf('With DDS 10 percent VEGF suppression for the retina chamber is: %.2f\n With DDS 10 percent VEGF suppression for the vitreous chamber is: %.2f\n With DDS 10 percent VEGF suppression for the aqueous chamber is: %.2f\n', time_at_target_ret_10, time_at_target_vit_10, time_at_target_aq_10);
 
 % Target concentrations for 50% suppression
 target_concentration_ret_50 = 0.5 * v_ret_Initial;
@@ -185,7 +181,6 @@ index_vit_50 = find(editedC_vvit >= target_concentration_vit_50, 1);
 time_at_target_vit_50 = editedt(index_vit_50);
 index_aq_50 = find(editedC_vaq >= target_concentration_aq_50, 1);
 time_at_target_aq_50 = editedt(index_aq_50);
-%fprintf('With DDS 50 percent VEGF suppression for the retina chamber is: %.2f\n With DDS 50 percent VEGF suppression for the vitreous chamber is: %.2f\n With DDS 50 percent VEGF suppression for the aqueous chamber is: %.2f\n', time_at_target_ret_50, time_at_target_vit_50, time_at_target_aq_50);
 
 Data_time_at_target_ret_10(i) = time_at_target_ret_10;
 Data_time_at_target_ret_50(i) = time_at_target_ret_50;
@@ -194,123 +189,12 @@ Data_time_at_target_vit_50(i) = time_at_target_vit_50;
 Data_time_at_target_aq_10(i) = time_at_target_aq_10; 
 Data_time_at_target_aq_50(i) = time_at_target_aq_50;
 
-
-% plot_DDS_drug_release_dynamics
-figure(figure_count)
-set(gca, 'FontSize', 20)
-hold on
-box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
-xlim([-2 200])
-xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
-legend(sprintf('Dose %0.2f mg', dose_in(i)), 'Location', 'northeast')
-pbaspect([1 1 1])
-axis square
-exportgraphics(figure(figure_count),sprintf('drug_release_DDS%d.png', k_DStore(i)), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-drug_dose_all{i,:} = drug_dose;
-RealTime_all{i,:} = RealTime;
-end
-
-
-% bar plot 10%
-barWidth = 1;
-figure(figure_count);
-hold on
-hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
-xticks(1:length(dose_in)); 
-xticklabels({'19000', '9500', '4750', '1900'});
-ylabel('Pharmacodynamic Suppression Time (Days)');
-xlabel('k_{D}');
-set(hBar1, 'BarWidth', barWidth);
-set(gca, 'FontSize', 12)
-legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0,700])
-pbaspect([1 1 1])
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('bar_dose_response_10.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-% bar plot 50%
-barWidth = 1;
-figure(figure_count);
-hold on
-hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
-xticks(1:length(dose_in)); 
-xticklabels({'19000', '9500', '4750', '1900'});
-ylabel('Pharmacodynamic Suppression Time (Days)');
-xlabel('k_{D}');
-set(hBar1, 'BarWidth', barWidth);
-set(gca, 'FontSize', 12)
-legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0,700])
-pbaspect([1 1 1])
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('bar_dose_response_50.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-
-% dose response VEGF
-figure(figure_count);
-hold on
-for j = 1:length(dose_in)
-plot(t,C_vret_Data(:,j), 'LineWidth', 2)
-end
-xlabel('Time(days)')
-ylabel('Free VEGF (pM)')
-title('Retina with DDS')
-%legend('19000', '9500', '4750', '1900', 'FontSize',12, 'Location','southeast');
-ylim([-0.6,60])
-xlim([-3 300])
-set(gca, 'FontSize', 20)
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('Retina_dose_response_VEGF.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-figure(figure_count);
-hold on
-for j = 1:length(dose_in)
-plot(t,C_vvit_Data(:,j), 'LineWidth', 2)
-end
-xlabel('Time(days)')
-ylabel('Free VEGF (pM)')
-title('Vitreous with DDS')
-ylim([-0.2,20])
-xlim([-3 300])
-set(gca, 'FontSize', 20)
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('Vitreous_dose_response_VEGF.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-figure(figure_count);
-hold on
-for j = 1:length(dose_in)
-plot(t,C_vaq_Data(:,j), 'LineWidth', 2)
-end
-xlabel('Time(days)')
-ylabel('Free VEGF (pM)')
-title('Aqueous with DDS')
-%legend('Dose 0.05 mg', 'Dose 0.1 mg', 'Dose 0.2 mg', 'Dose 0.5 mg', 'Dose 1 mg', 'Dose 2 mg', 'FontSize',12, 'Location','southeast');
-ylim([-0.018,1.8])
-xlim([-3 300])
-set(gca, 'FontSize', 20)
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('Aqueous_dose_response_VEGF.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
+fprintf([' k_D_value = %.3f  | 10%% VEGF suppression times (days): ', ...
+         'Retina: %.2f, Vitreous: %.2f, Aqueous: %.2f\n'], ...
+k_DStore(i), time_at_target_ret_10, time_at_target_vit_10, time_at_target_aq_10);
+fprintf([' k_D_value = %.3f  | 50%% VEGF suppression times (days): ', ...
+         'Retina: %.2f, Vitreous: %.2f, Aqueous: %.2f\n'], ...
+        k_DStore(i), time_at_target_ret_50, time_at_target_vit_50, time_at_target_aq_50);
 
 save('DDS_doses_kD', ...
     't', ...
@@ -325,15 +209,15 @@ save('DDS_doses_kD', ...
     'DDS_geometry', ...
     'v_ret_Initial', 'v_vit_Initial', 'v_aq_Initial');
 
-
+%-----------------------------------------------------------------
 
 function derivVector=ODEs(t,y, rpar, k_D_value) %must be (denominator, numerators)
 
 timeArray = rpar(:,2);
-drugReleaseArray = rpar(:,1);
+drugReleaseArray = rpar(:,1); %pM/s
 queryTime = t;
 
-DrugAmountAtTime = interp1(timeArray, drugReleaseArray, queryTime, 'linear');
+DrugAmountAtTime = interp1(timeArray, drugReleaseArray, queryTime, 'linear'); %pM/s
 
 %----------------------------------------------------------------
 %Parameters

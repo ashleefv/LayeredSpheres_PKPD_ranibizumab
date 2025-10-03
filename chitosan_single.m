@@ -92,14 +92,15 @@ v_aq_Initial = E_Q*(V_vit/C_L)*kv_el;
 
 for i = 1:length(dose_in) %for loop for each dose
 
-dose_specific = dose_in(i);
+dose_specific = dose_in(i); %mg
 [time, drug_dose, initial_drug_dose] = solve_FD_spheres_variable_diffusivity(dose_specific, tfinal, DDS_geometry, radius_scale(i), thickness_scale(i));
 
 RealTime = time/(60*60*24);
-Dose = (drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12;
+Dose = (drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12; %pM/s
+initial_drug_dose_pM = (initial_drug_dose*10^-3)/((48.35*1000)*(4.5E-3)) * 10^12;%pM
 
 rpar = [Dose, RealTime];
-Ci=[v_ret_Initial,0,0,0,v_vit_Initial,initial_drug_dose,0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
+Ci=[v_ret_Initial,0,0,0,v_vit_Initial,initial_drug_dose_pM,0,0,v_aq_Initial,0,0,0]; %[VEGF, ranibizumab, VEGF-ranibizumab, ranibizumab-VEGF-ranibizumab] repeated 3 times for each chamber (Retina, Vitreous, Aqueous)
 odeFunc = @(t,Ci) ODEs(t,Ci, rpar);
 soln=ode45(odeFunc,t,Ci);
 
@@ -141,10 +142,6 @@ else
     'Drug loading is not enough to reduce VEGF to 50% of its original value'
 end
 
-%disp(Index_min)
-%disp(['The lowest value is:', num2str(lowest_vret), ' at index:', num2str(Index_vret)]);
-%disp(['The lowest value is:', num2str(lowest_vvit), ' at index:', num2str(Index_vvit)]);
-%disp(['The lowest value is:', num2str(lowest_vaq), ' at index:', num2str(Index_vaq)]);
 
 %Calculates 10% Free VEGF Suppression Time
 editedC_vret = C_vret(Index_min:end);
@@ -164,7 +161,6 @@ index_vit_10 = find(editedC_vvit >= target_concentration_vit_10, 1);
 time_at_target_vit_10 = editedt(index_vit_10);
 index_aq_10 = find(editedC_vaq >= target_concentration_aq_10, 1);
 time_at_target_aq_10 = editedt(index_aq_10);
-%fprintf('With DDS 10 percent VEGF suppression for the retina chamber is: %.2f\n With DDS 10 percent VEGF suppression for the vitreous chamber is: %.2f\n With DDS 10 percent VEGF suppression for the aqueous chamber is: %.2f\n', time_at_target_ret_10, time_at_target_vit_10, time_at_target_aq_10);
 
 % Target concentrations for 50% suppression
 target_concentration_ret_50 = 0.5 * v_ret_Initial;
@@ -178,7 +174,14 @@ index_vit_50 = find(editedC_vvit >= target_concentration_vit_50, 1);
 time_at_target_vit_50 = editedt(index_vit_50);
 index_aq_50 = find(editedC_vaq >= target_concentration_aq_50, 1);
 time_at_target_aq_50 = editedt(index_aq_50);
-%fprintf('With DDS 50 percent VEGF suppression for the retina chamber is: %.2f\n With DDS 50 percent VEGF suppression for the vitreous chamber is: %.2f\n With DDS 50 percent VEGF suppression for the aqueous chamber is: %.2f\n', time_at_target_ret_50, time_at_target_vit_50, time_at_target_aq_50);
+%---- 10% suppression ----
+fprintf('radius_scale = %.4f R_C | 10%% Suppression (days) -> Retina: %.2f, Vitreous: %.2f, Aqueous: %.2f\n', ...
+    radius_scale(i), time_at_target_ret_10, time_at_target_vit_10, time_at_target_aq_10);
+
+% ---- 50% suppression ----
+fprintf('radius_scale = %.4f R_C | 50%% Suppression (days) -> Retina: %.2f, Vitreous: %.2f, Aqueous: %.2f\n', ...
+    radius_scale(i), time_at_target_ret_50, time_at_target_vit_50, time_at_target_aq_50);
+
 
 Data_time_at_target_ret_10(i) = time_at_target_ret_10;
 Data_time_at_target_ret_50(i) = time_at_target_ret_50;
@@ -187,28 +190,6 @@ Data_time_at_target_vit_50(i) = time_at_target_vit_50;
 Data_time_at_target_aq_10(i) = time_at_target_aq_10; 
 Data_time_at_target_aq_50(i) = time_at_target_aq_50;
 
-
-% plot_DDS_drug_release_dynamics
-figure(figure_count)
-set(gca, 'FontSize', 20)
-hold on
-box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
-xlim([-2 200])
-xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
-legend(sprintf('%0.4fR_C', radius_scale(i)), 'Location', 'northeast')
-%legend(sprintf('%0.2fR_C, %0.2fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
-%fontsize(figure(3), 17, "points")
-pbaspect([1 1 1])
-axis square
-%exportgraphics(figure(figure_count),sprintf('drug_release_DDS%d.png', radius_scale(i)), 'Resolution', 300)
-exportgraphics(figure(figure_count),sprintf('drug_release_DDS%d.png', radius_scale(i)), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-drug_dose_all{i,:} = drug_dose;
-RealTime_all{i,:} = RealTime;
-end
 
 save('Chitosan_single.mat', ...
     'radius_scale', 'dose_in', ...
@@ -220,55 +201,15 @@ save('Chitosan_single.mat', ...
     'v_ret_Initial', 'v_vit_Initial', 'v_aq_Initial', ...
     'DDS_geometry');
 
-% bar plot
-barWidth = 1;
-figure(figure_count);
-hold on
-hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
-xticks(1:length(radius_scale)); 
-xticklabels({'0.0001R_{C}', '0.1R_{C}', '0.5R_{C}', 'R_{C}', '3R_{C}','5R_{C}', '10R_{C}'});
-ylabel('Pharmacodynamic Suppression Time (Days)');
-set(hBar1, 'BarWidth', barWidth);
-title('Chitosan Single-Layered Varied R_{C}');
-set(gca, 'FontSize', 12)
-legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0 2000])
-pbaspect([1 1 1])
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('barsingleC_10.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-barWidth = 1;
-figure(figure_count);
-hold on
-hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
-xticks(1:length(radius_scale)); 
-xticklabels({'0.0001R_{C}', '0.1R_{C}', '0.5R_{C}', 'R_{C}', '3R_{C}','5R_{C}', '10R_{C}'});
-ylabel('Pharmacodynamic Suppression Time (Days)');
-set(hBar1, 'BarWidth', barWidth);
-title('Chitosan Single-Layered Varied R_{C}');
-set(gca, 'FontSize', 12)
-%legend({'10% Suppression', '50% Suppression'},'FontSize',12, 'Location', 'northwest');
-legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
-ylim([0 2000])
-pbaspect([1 1 1])
-axis square
-box on
-exportgraphics(figure(figure_count),sprintf('barsingleC_50.png'), 'Resolution', 300)
-figure_count = figure_count+1;
-hold off
-
-
+%---------------------------------------------------------------
 
 function derivVector=ODEs(t,y, rpar) %must be (denominator, numerators)
 
 timeArray = rpar(:,2);
-drugReleaseArray = rpar(:,1);
+drugReleaseArray = rpar(:,1); %pM/s
 queryTime = t;
 
-DrugAmountAtTime = interp1(timeArray, drugReleaseArray, queryTime, 'linear');
+DrugAmountAtTime = interp1(timeArray, drugReleaseArray, queryTime, 'linear'); %pM/s
 
 %----------------------------------------------------------------
 %Parameters
