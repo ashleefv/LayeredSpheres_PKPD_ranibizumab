@@ -217,25 +217,20 @@ cumulrel_num = ones(size(time));
 
 % drug release percentages over time units of %/s
 drug_release = zeros(size(cumulrel_num));
- for i = 1:length(cumulrel_num)   
-    
-    if i == 1
-        drug_release(i) =  cumulrel_num(1); % do not use this as initial drug release RATE, instead this is the burst amount that determines initial drug dose AMOUNT
-    else
-        drug_release(i) = (cumulrel_num(i)-cumulrel_num(i-1)) / (time(i) - time(i-1));
-    end
+
+% Treat the first point as BURST amount (in %), not a rate
+drug_release(1) = cumulrel_num(1);
+
+ for i = 2:length(cumulrel_num)   
+        drug_release(i) = (cumulrel_num(i)-cumulrel_num(i-1)) / (time(i) - time(i-1)); 
  end
 
-% initial drug dose mg/s
+% initial drug dose mg
 initial_drug_dose = initial_condition*(drug_release(1)/100);
 
-% drug release over time IC units (mg)/s
-for i = 1:length(cumulrel_num) 
-if i == 1
-    drug_release(i) = initial_condition*(drug_release(2)/100)*60*60*24;
-else
+% drug release over time units (mg)/s
+for i = 2:length(cumulrel_num) 
     drug_release(i) = initial_condition*(drug_release(i)/100)*60*60*24;
-end
 end
 % figure(2)
 % plot(time/(60*60*24),drug_release)

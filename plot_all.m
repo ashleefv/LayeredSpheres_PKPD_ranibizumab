@@ -3,8 +3,6 @@ clear;
 
 
 
-
-
 %%%%%%%%%%%%%%%% figure 2 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 load ("without_DDS.mat")
@@ -408,13 +406,13 @@ for i = 1:length(dose_in)
     drug_dose = drug_dose_all{i}; 
 % plot_DDS_drug_release_dynamics
 subplot(1,5,figure_count)
-set(gca, 'FontSize', 16)
+set(gca, 'FontSize', 10)
 hold on
 box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
+plot(RealTime(2:end), drug_dose(2:end), 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release Rate (mg/s)');
 legend(sprintf('Dose %0.2f mg', dose_in(i)), 'Location', 'northeast')
 pbaspect([1 1 1])
 axis square
@@ -430,7 +428,7 @@ labelstring = {'A', 'B', 'C', 'D','E',};
 for v = 1:5
     subplot(1,5,v)
     hold on
-    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 14)
+    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 10)
 end
 
 widthInches = 25;
@@ -566,13 +564,13 @@ for i = 1:length(dose_in)
 subplot(2,7,figure_count)
 
 
-set(gca, 'FontSize', 16)
+set(gca, 'FontSize', 12)
 hold on
 box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
+plot(RealTime(2:end), drug_dose(2:end), 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release Rate (mg/s)');
 legend(sprintf('%0.4fR_C', radius_scale(i)), 'Location', 'northeast')
 %legend(sprintf('%0.2fR_C, %0.2fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
 %fontsize(figure(3), 17, "points")
@@ -593,13 +591,13 @@ for i = 1:length(dose_in)
     RealTime = RealTime_all{i};     % Extract ith drug release time profile
     drug_dose = drug_dose_all{i}; 
 subplot(2,7,figure_count)
-set(gca, 'FontSize', 16)
+set(gca, 'FontSize', 12)
 hold on
 box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
+plot(RealTime(2:end), drug_dose(2:end), 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release Rate (mg/s)');
 legend(sprintf('%0.4fR_P', radius_scale(i)), 'Location', 'northeast')
 %legend(sprintf('%0.2fR_C, %0.2fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
 %fontsize(figure(3), 17, "points")
@@ -615,7 +613,7 @@ labelstring = {'A', 'B', 'C', 'D','E', 'F','G','H', 'I','J','K','L','M','N'};
 for v = 1:14
     subplot(2,7,v)
     hold on
-    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 14)
+    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 10)
 end
 
 widthInches = 35;
@@ -640,8 +638,8 @@ xticklabels({'0.5R_{C}', 'R_{C}', '1.5R_{C}', '2R_{C}', '3R_{C}','4R_{C}', '5R_{
 ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied R_{C}, Constant \DeltaR');
-set(gca, 'FontSize', 12)
-legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
+set(gca, 'FontSize', 8)
+legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',08, 'Location', 'northwest');
 ylim([0,2000])
 pbaspect([1 1 1])
 axis square
@@ -659,9 +657,9 @@ xticklabels({'0.5R_{C}', 'R_{C}', '1.5R_{C}', '2R_{C}', '3R_{C}','4R_{C}', '5R_{
 ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied R_{C}, Constant \DeltaR');
-set(gca, 'FontSize', 12)
+set(gca, 'FontSize', 8)
 %legend({'10% Suppression', '50% Suppression'},'FontSize',12, 'Location', 'northwest');
-legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
+legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',8, 'Location', 'northwest');
 ylim([0,2000])
 pbaspect([1 1 1])
 axis square
@@ -682,8 +680,8 @@ xticklabels({'0.01\DeltaR', '0.1\DeltaR', '\DeltaR', '10\DeltaR', '20\DeltaR','2
 ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied \DeltaR, Constant R_{C}');
-set(gca, 'FontSize', 12)
-legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
+set(gca, 'FontSize', 08)
+legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',8, 'Location', 'northwest');
 ylim([0,2000])
 pbaspect([1 1 1])
 axis square
@@ -701,9 +699,9 @@ xticklabels({'0.01\DeltaR', '0.1\DeltaR', '\DeltaR', '10\DeltaR', '20\DeltaR','2
 ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied \DeltaR, Constant R_{C}');
-set(gca, 'FontSize', 12)
+set(gca, 'FontSize', 08)
 %legend({'10% Suppression', '50% Suppression'},'FontSize',12, 'Location', 'northwest');
-legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
+legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',8, 'Location', 'northwest');
 ylim([0,2000])
 pbaspect([1 1 1])
 axis square
@@ -723,8 +721,8 @@ xticklabels({'0.1R_{C},10\DeltaR', '0.5R_{C},2\DeltaR', '1.5R_{C},3\DeltaR', '2R
 ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied R_{C} and \DeltaR');
-set(gca, 'FontSize', 12)
-legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',14, 'Location', 'northwest');
+set(gca, 'FontSize', 08)
+legend({'Retina 10%', 'Vitreous 10%', 'Aqueous 10%'}, 'FontSize',8, 'Location', 'northwest');
 ylim([0,2000])
 pbaspect([1 1 1])
 axis square
@@ -742,9 +740,9 @@ xticklabels({'0.1R_{C},10\DeltaR', '0.5R_{C},2\DeltaR', '1.5R_{C},3\DeltaR', '2R
 ylabel('Pharmacodynamic Suppression Time (Days)');
 set(hBar1, 'BarWidth', barWidth);
 title('Bi-Layered Varied R_{C} and \DeltaR');
-set(gca, 'FontSize', 12)
+set(gca, 'FontSize', 08)
 %legend({'10% Suppression', '50% Suppression'},'FontSize',12, 'Location', 'northwest');
-legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',14, 'Location', 'northwest');
+legend({'Retina 50%', 'Vitreous 50%', 'Aqueous 50%'}, 'FontSize',8, 'Location', 'northwest');
 ylim([0,2000])
 pbaspect([1 1 1])
 axis square
@@ -758,7 +756,7 @@ labelstring = {'A', 'B', 'C', 'D','E', 'F'};
 for v = 1:6
     subplot(3,2,v)
     hold on
-    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 14)
+    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 10)
 end
 
 widthInches = 10;
@@ -787,13 +785,13 @@ for i = 1:length(dose_in)
     drug_dose = drug_dose_all{i}; 
     % plot_DDS_drug_release_dynamics
 subplot(3,7,figure_count);
-set(gca, 'FontSize', 20)
+set(gca, 'FontSize', 10)
 hold on
 box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
+plot(RealTime(2:end), drug_dose(2:end), 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release Rate (mg/s)');
 legend(sprintf('%0.1fR_C', radius_scale(i)), 'Location', 'northeast')
 %legend(sprintf('%0.2fR_C, %0.2fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
 %fontsize(figure(3), 17, "points")
@@ -813,13 +811,13 @@ for i = 1:length(dose_in)
 
 % plot_DDS_drug_release_dynamics
 subplot(3,7,figure_count);
-set(gca, 'FontSize', 20)
+set(gca, 'FontSize', 10)
 hold on
 box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
+plot(RealTime(2:end), drug_dose(2:end), 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release Rate (mg/s)');
 legend(sprintf('%0.2fΔR', thickness_scale(i)), 'Location', 'northeast')
 %legend(sprintf('%0.2fR_C, %0.2fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
 %fontsize(figure(3), 17, "points")
@@ -840,13 +838,13 @@ for i = 1:length(dose_in)
 
    % plot_DDS_drug_release_dynamics
 subplot(3,7,figure_count);
-set(gca, 'FontSize', 20)
+set(gca, 'FontSize', 10)
 hold on
 box on
-plot(RealTime, drug_dose, 'LineWidth', 2)
+plot(RealTime(2:end), drug_dose(2:end), 'LineWidth', 2)
 xlim([-2 200])
 xlabel('Time (days)')
-%ylabel('DDS Drug Release (mg)');
+%ylabel('DDS Drug Release Rate (mg/s)');
 %legend(sprintf('%0.1fΔR', thickness_scale(i)), 'Location', 'northeast')
 legend(sprintf('%0.1fR_C, %0.1fΔR', radius_scale(i),thickness_scale(i)), 'Location', 'northeast')
 %fontsize(figure(3), 17, "points")
@@ -862,7 +860,7 @@ labelstring = {'A', 'B', 'C', 'D','E', 'F','G','H', 'I','J','K','L','M','N','O',
 for v = 1:21
     subplot(3,7,v)
     hold on
-    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 14)
+    text(-0.2, 1.1, labelstring(v)', 'Units', 'normalized', 'FontWeight', 'bold','FontSize', 10)
 end
 
 widthInches = 35;
@@ -1004,10 +1002,6 @@ run('ScriptForExportingImages.m')
 
 
 
-%%%%%%%%%%%%%%%% figure 11 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-clc;
-clear;
 
 
 %%%%%%%%%%%%%%%% figure 11 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1029,7 +1023,7 @@ end
 xlabel('Time(days)')
 ylabel('Free VEGF (pM)')
 title('Retina')
-legend('k_{off} 0.864', 'k_{off} 1.296', 'k_{off} 1.728', 'k_{off} 3.456', 'FontSize',12, 'Location','southeast');
+legend('k_{off} 0.345', 'k_{off} 0.864', 'k_{off} 1.728', 'k_{off} 3.456', 'FontSize',12, 'Location','southeast');
 ylim([-0.6,60])
 xlim([-3 300])
 set(gca, 'FontSize', 20)
@@ -1154,7 +1148,7 @@ run('ScriptForExportingImages.m')
 %%%%%%%%%%%%%%%% figure 12 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 figure(12);
-figname = 'figure11';
+figname = 'figure12';
 
 figure_count = 1;
 
@@ -1206,7 +1200,7 @@ subplot(2,4,figure_count);
 hold on
 hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
-xticklabels({'0.864', '1.296', '1.728', '3.456'});
+xticklabels({'0.345', '0.864', '1.728', '3.456'});
 ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{off}');
 set(hBar1, 'BarWidth', barWidth);
@@ -1226,7 +1220,7 @@ subplot(2,4,figure_count);
 hold on
 hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
-xticklabels({'0.864', '1.296', '1.728', '3.456'});
+xticklabels({'0.345', '0.864', '1.728', '3.456'});
 ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{off}');
 set(hBar1, 'BarWidth', barWidth);
@@ -1294,7 +1288,7 @@ subplot(2,4,figure_count);
 hold on
 hBar1 = bar([Data_time_at_target_ret_10', Data_time_at_target_vit_10',Data_time_at_target_aq_10'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
-xticklabels({'0.864', '1.296', '1.728', '3.456'});
+xticklabels({'0.345', '0.864', '1.728', '3.456'});
 ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{off}');
 set(hBar1, 'BarWidth', barWidth);
@@ -1314,7 +1308,7 @@ subplot(2,4,figure_count);
 hold on
 hBar1 = bar([Data_time_at_target_ret_50', Data_time_at_target_vit_50',Data_time_at_target_aq_50'], 'grouped', 'LineWidth', 1.5); 
 xticks(1:length(dose_in)); 
-xticklabels({'0.864', '1.296', '1.728', '3.456'});
+xticklabels({'0.345', '0.864', '1.728', '3.456'});
 ylabel('Pharmacodynamic Suppression Time (Days)');
 xlabel('k_{off}');
 set(hBar1, 'BarWidth', barWidth);
