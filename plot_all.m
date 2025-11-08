@@ -7,7 +7,10 @@ clear;
 
 load ("without_DDS.mat")
 
-
+% --- Load patient data ---
+M = readmatrix('Patient40Data.xlsx','Sheet','Sheet1');
+t_pat    = M(:,1); 
+vegf_pat = M(:,6);
 
 figname = 'figure2';
 figure_count = 1;
@@ -62,16 +65,24 @@ ylim([1, 1E7]);
 xlim([-3 300])
 
 yyaxis right
-plot(t,C_vaq_Data(:,j), 'LineWidth', 2)
+plot(t, C_vaq_Data(:,j), 'LineWidth', 2, 'DisplayName','Free VEGF')  
+hold on
+scatter(t_pat, vegf_pat, 36, 'o', ...
+    'MarkerFaceColor','none', ...     
+    'MarkerEdgeColor','k', ...        
+    'LineWidth',1.2, ...
+    'DisplayName','Patient data');        
 ylabel('Free VEGF (pM)')
 set(gca, 'FontSize', 16)
+
 axis square
 box on
-%exportgraphics(figure(figure_count),sprintf('Aqueous%d.png',dose_in(j)), 'Resolution', 300)
+legend({'Ranibizumab', 'Free VEGF', 'Patitent Data'}, 'FontSize',10, 'Location', 'southeast');
+%exportgraphics(figure(figure_count),sprintf('Retina%d.png',dose_in(j)), 'Resolution', 300)
 figure_count = figure_count+1;
 hold off
 end
-end 
+end  
 
 % Figure 2 for 0.5 mg
 load("DDS_dose.mat")
@@ -322,6 +333,9 @@ figure_count = figure_count+1;
 hold off
 
 
+load("DDS_dose.mat")
+for j = 1:length(dose_in)
+if (dose_in(j) == 0.5)
 
 % dose response VEGF
 subplot(2,3,figure_count);
@@ -376,7 +390,8 @@ box on
 %exportgraphics(figure(figure_count),sprintf('Aqueous_dose_response_VEGF.png'), 'Resolution', 300)
 figure_count = figure_count+1;
 hold off
-
+end
+end
 
 
 
@@ -1343,4 +1358,5 @@ annotation('textbox', [0.05, 0.47, 0.9, 0.05], 'String', 'With DDS', ...
     'HorizontalAlignment', 'center');
 
 run('ScriptForExportingImages.m')
+
 
