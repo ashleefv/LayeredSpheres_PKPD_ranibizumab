@@ -1,4 +1,4 @@
-function [output1, output2, output3] = solve_FD_spheres_variable_diffusivity(dose_amount, Total_time, DDS_geometry, radius_scale, thickness_scale)
+function [output1, output2, output3, output4, output5, output6] = solve_FD_spheres_variable_diffusivity(dose_amount, Total_time, DDS_geometry, radius_scale, thickness_scale)
 
 %% Solves the PDE for Fickian diffusion with variable diffusivity within a radially symmetric sphere 
 % The PDE is solved numerically using method of lines, the spherical finite
@@ -38,6 +38,7 @@ end
 if strcmp(DDS_geometry,"Chitosan")
     R1 = 0;
     R2 = ((10.2e-4)/2)*radius_scale; %If PCL/Chitosan
+    delR = 0;
     %DInner = 2.91e-15; % cm2/s;;
     DOuter = 6.5e-15; % cm2/s; for chiotosan 2.91e-15, for PLC 2.98e-11
     burst = 27; % %
@@ -48,6 +49,7 @@ end
 if strcmp(DDS_geometry,"PCL")
     R1 = 0;
     R2 = ((12.7e-4)/2)*radius_scale; %If PCL/Chitosan
+    delR = 0;
     %DInner = 2.91e-15; % cm2/s;;
     DOuter = 3e-12; % cm2/s; for chiotosan 2.91e-15, for PLC 2.98e-11
     burst = 4; % %
@@ -70,6 +72,7 @@ Mdesired = 1000; % single layer
 if R2>R1 
     if R1>0% two layers
         M = floor(R1/R2*Mdesired); %number of spatial intervals in Method of Lines for each layer
+    M = max(M,1);
     else 
         M = Mdesired;
     end
@@ -240,4 +243,7 @@ end
 output1 = time;
 output2 = drug_release;
 output3= initial_drug_dose;
+output4 = R1;
+output5 = R2;
+output6 = delR ;
 end
