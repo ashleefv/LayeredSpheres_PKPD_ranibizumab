@@ -3,19 +3,19 @@ clc; clear;
 dose_common = [2 2 2 2 2 2 2];
 
 cases = [
-    % struct( ...
-    %     "caseName","Without_DDS_dose", ...
-    %     "DDS_geometry","NaN", ...
-    %     "dose_in",(0.05: 0.01: 2), ...
-    %     "radius_scale",0, ...
-    %     "thickness_scale", 0)
-    % 
-    % struct( ...
-    %     "caseName","With_DDS_dose", ...
-    %     "DDS_geometry","Chitosan_PCL", ...
-    %     "dose_in",(0.05: 0.01: 2), ...
-    %     "radius_scale", 1, ...
-    %     "thickness_scale", 1)
+     struct( ...
+         "caseName","Without_DDS_dose", ...
+         "DDS_geometry","NaN", ...
+         "dose_in",(0.05: 0.01: 2), ...
+         "radius_scale",0, ...
+         "thickness_scale", 0)
+     
+     struct( ...
+         "caseName","With_DDS_dose", ...
+         "DDS_geometry","Chitosan_PCL", ...
+         "dose_in",(0.05: 0.01: 2), ...
+         "radius_scale", 1, ...
+         "thickness_scale", 1)
 
     struct( ...
         "caseName","Chitosan_single", ...
@@ -256,48 +256,34 @@ end
     C_rvit_Data(:,i) = C_rvit;
     C_raq_Data(:,i)  = C_raq;
 
-    % ---- suppression time calculation (same for both) ----
-    [lowest_vret, Iret] = min(C_vret);
-    [lowest_vvit, Ivit] = min(C_vvit);
-    [lowest_vaq,  Iaq ] = min(C_vaq);
+% ---- suppression time calculation ----
 
-    Index_min = 10;
-    if lowest_vret <= 0.5*v_ret_Initial || lowest_vvit <= 0.5*v_vit_Initial || lowest_vaq <= 0.5*v_aq_Initial
-        Index_min = min([Iret, Ivit, Iaq]);
-end
+[lowest_vret, Iret] = min(C_vret);
+[lowest_vvit, Ivit] = min(C_vvit);
+[lowest_vaq,  Iaq ] = min(C_vaq);
 
-    editedt   = t(Index_min:end);
-    eRet = C_vret(Index_min:end);
-    eVit = C_vvit(Index_min:end);
-    eAq  = C_vaq(Index_min:end);
+% threshold values
+thr_ret_10 = 0.1*v_ret_Initial;
+thr_vit_10 = 0.1*v_vit_Initial;
+thr_aq_10  = 0.1*v_aq_Initial;
 
-    % helper safe pick (avoid "Index exceeds" if not found)
-    f = @(vec,thr) find(vec >= thr, 1, 'first');
+thr_ret_50 = 0.5*v_ret_Initial;
+thr_vit_50 = 0.5*v_vit_Initial;
+thr_aq_50  = 0.5*v_aq_Initial;
 
-    ir10 = f(eRet, 0.1*v_ret_Initial);
-    iv10 = f(eVit, 0.1*v_vit_Initial);
-    ia10 = f(eAq,  0.1*v_aq_Initial);
+% helper function:
+get_recovery_time = @(time, conc, Imin, thr) ...
+    local_get_recovery_time(time, conc, Imin, thr);
 
-    ir50 = f(eRet, 0.5*v_ret_Initial);
-    iv50 = f(eVit, 0.5*v_vit_Initial);
-    ia50 = f(eAq,  0.5*v_aq_Initial);
+  
 
-    if ~isempty(ir10), Data_time_at_target_ret_10(i) = editedt(ir10); end
-    if ~isempty(iv10), Data_time_at_target_vit_10(i) = editedt(iv10); end
-    if ~isempty(ia10), Data_time_at_target_aq_10(i)  = editedt(ia10); end
+Data_time_at_target_ret_10(i) = get_recovery_time(t, C_vret, Iret, thr_ret_10);
+Data_time_at_target_vit_10(i) = get_recovery_time(t, C_vvit, Ivit, thr_vit_10);
+Data_time_at_target_aq_10(i)  = get_recovery_time(t, C_vaq,  Iaq,  thr_aq_10);
 
-    if ~isempty(ir50), Data_time_at_target_ret_50(i) = editedt(ir50); end
-    if ~isempty(iv50), Data_time_at_target_vit_50(i) = editedt(iv50); end
-    if ~isempty(ia50), Data_time_at_target_aq_50(i)  = editedt(ia50); end
-
-
-    tret = NaN; tvit = NaN; taq = NaN;
-    if ~isempty(ir10), tret = editedt(ir10); end
-    if ~isempty(iv10), tvit = editedt(iv10); end
-    if ~isempty(ia10), taq  = editedt(ia10); end
-
-    fprintf("k_D=%g, k_off=%g | 10%% times (days): Ret=%.2f Vit=%.2f Aq=%.2f\n", ...
-        par.k_D, par.k_off, tret, tvit, taq);
+Data_time_at_target_ret_50(i) = get_recovery_time(t, C_vret, Iret, thr_ret_50);
+Data_time_at_target_vit_50(i) = get_recovery_time(t, C_vvit, Ivit, thr_vit_50);
+Data_time_at_target_aq_50(i)  = get_recovery_time(t, C_vaq,  Iaq,  thr_aq_50);
 
 end
 
@@ -318,5 +304,24 @@ end
     
    
   
+function recovery_time = local_get_recovery_time(time, conc, Imin, threshold)
+
+    recovery_time = NaN;
+
+    % If VEGF never goes below the threshold, suppression was not achieved
+    if min(conc) > threshold
+        return
+    end
+
+    % Search only after the minimum VEGF point
+    time_after_min = time(Imin:end);
+    conc_after_min = conc(Imin:end);
+
+    idx = find(conc_after_min >= threshold, 1, 'first');
+
+    if ~isempty(idx)
+        recovery_time = time_after_min(idx);
+    end
+end
 
 
