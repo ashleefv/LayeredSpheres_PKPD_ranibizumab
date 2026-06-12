@@ -33,21 +33,21 @@ cases = [
 
     struct( ...
         "caseName", "BiLayer_Changing_Chitosan", ...
-        "DDS_geometry", "Chitosan_PCL", ...      % if your bilayer uses this flag
+        "DDS_geometry", "Chitosan_PCL", ...      
         "dose_in", dose_common, ...
         "radius_scale", [0.5 1 1.5 2 3 4 5], ...
         "thickness_scale", ones(1,7) )
 
     struct( ...
         "caseName", "BiLayer_Changing_PCL", ...
-        "DDS_geometry", "Chitosan_PCL", ...      % or whatever your bilayer flag is
+        "DDS_geometry", "Chitosan_PCL", ...      
         "dose_in", dose_common, ...
         "radius_scale", ones(1,7), ...
         "thickness_scale", [0.01 0.1 1 10 20 25 30] )
 
     struct( ...
         "caseName", "BiLayer_changing_Both", ...
-        "DDS_geometry", "Chitosan_PCL", ...      % or your bilayer geometry flag
+        "DDS_geometry", "Chitosan_PCL", ...      
         "dose_in", dose_common, ...
         "radius_scale", [0.1 0.5 1.5 2 3 4 5], ...
         "thickness_scale", [10 2 3 5 6 2 0.5] )
@@ -186,7 +186,7 @@ Data_time_at_target_vit_50 = NaN(1,nd);
 Data_time_at_target_aq_10  = NaN(1,nd);
 Data_time_at_target_aq_50  = NaN(1,nd);
 
-% time series (optional but you save them, so they must exist)
+% time series
 C_vret_Data = NaN(nt, nd);
 C_vvit_Data = NaN(nt, nd);
 C_vaq_Data  = NaN(nt, nd);
@@ -227,7 +227,7 @@ for i = 1:nd
 
         RealTime_days = time_sec/(60*60*24);
 
-        Dose_profile = (drug_dose*1e-3)/((48.35*1000)*(4.5E-3)) * 1e12;           % pM (or pM/day depending on your meaning)
+        Dose_profile = (drug_dose*1e-3)/((48.35*1000)*(4.5E-3)) * 1e12;           
         initDose_pM  = (initial_drug_dose*1e-3)/((48.35*1000)*(4.5E-3)) * 1e12;
 
         rpar = [Dose_profile(:), RealTime_days(:)];  % [amount, time]
@@ -241,7 +241,7 @@ for i = 1:nd
         RealTime_all{i}     = RealTime_days; 
 end
 
-    % ---- evaluate solution on your common t-grid ----
+    % ---- evaluate solution on common t-grid ----
     C_vret = deval(soln,t,1);
     C_rret = deval(soln,t,2);
     C_vvit = deval(soln,t,5);
